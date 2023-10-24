@@ -3,16 +3,19 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main # or the branch you want to deploy
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
+    env:
+      SSH_KEY_PATH: ${{ secrets.DEPLOY_KEY_PATH }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-      
+
     - name: Copy code to EC2
       uses: appleboy/scp-action@master
       with:
@@ -24,9 +27,9 @@ jobs:
 
     - name: Debug SSH Key
       run: |
-        echo "$DEPLOY_KEY"
-        cat $HOME/.ssh/id_rsa  # Verify the key content
-        
+        echo "$DEPLOY_KEY_PATH"
+        cat $SSH_KEY_PATH
+
     - name: SSH into EC2 and restart the app (if needed)
       run: |
-        ssh -i /home/ubuntu/.ssh/key.pem ubuntu@18.232.83.38 "cd /home/ubuntu/copy_paste"
+        ssh -i $SSH_KEY_PATH ubuntu@18.232.83.38 "cd /home/ubuntu/copy_paste"
