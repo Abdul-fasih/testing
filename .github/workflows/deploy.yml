@@ -29,4 +29,4 @@ jobs:
         
     - name: SSH into EC2 and restart the app (if needed)
       run: |
-        ssh -i $HOME/.ssh/id_rsa ubuntu@18.232.83.38 "cd /home/ubuntu/copy_paste"
+        ssh -i /home/ubuntu/.ssh/key.pem ubuntu@18.232.83.38 "cd /home/ubuntu/copy_paste"
