@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main # or the branch you want to deplo
+      - main # or the branch you want to deploy
 
 jobs:
   deploy:
@@ -22,6 +22,11 @@ jobs:
         source: ./
         target: /home/ubuntu/copy_paste
 
+    - name: Debug SSH Key
+      run: |
+        echo "$DEPLOY_KEY"
+        cat $HOME/.ssh/id_rsa  # Verify the key content
+        
     - name: SSH into EC2 and restart the app (if needed)
       run: |
-        ssh -i ${{ secrets.DEPLOY_KEY }} ubuntu@18.232.83.38 "cd /home/ubuntu/copy_paste"
+        ssh -i $HOME/.ssh/id_rsa ubuntu@18.232.83.38 "cd /home/ubuntu/copy_paste"
