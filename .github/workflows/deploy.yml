@@ -1,28 +1,23 @@
-name: Deploy to EC2
-
-on: #aaaaa
+name: Build and Push Docker Image
+on:
   push:
     branches:
       - main
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      
-    - name: Copy code to EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: 18.212.123.158
-        username: ubuntu
-        key: ${{ secrets.DEPLOY_KEY }}
-        source: ./
-        target: /home/ubuntu/copy_paste
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: SSH into EC2 and navigate to the directory
-      run: |
-        ssh -i ${{ secrets.DEPLOY_KEY }} ubuntu@18.212.123.158
-        cd /home/ubuntu/copy_paste
+      - name: Login to DockerHub
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      - name: Build Docker Image
+        run: docker build -t fasih568/image:latest .
+        # Replace 'your-dockerhub-username' with your actual DockerHub username.
+
+      - name: Push Docker Image
+        run: docker push fasih568/image:latest
+        # Replace 'your-dockerhub-username' with your actual DockerHub username.
