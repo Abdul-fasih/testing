@@ -15,4 +15,6 @@ jobs:
 
     - name: Copy files to EC2
       run: |
-        scp -i ${{ secrets.EC2_SSH_KEY }} -r ./ 18.232.83.38:/home/ubuntu/copy_paste/
+        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > //home/ubuntu/.ssh
+        chmod 600 /home/ubuntu/.ssh
+        scp -i /home/ubuntu/.ssh/id_rsa -r ./ 18.232.83.38:/home/ubuntu/copy_paste/
