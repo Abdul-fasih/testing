@@ -2,14 +2,12 @@ name: Build and Push Image to AWS ECR
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build-and-push:
     name: Build and Push to ECR
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -29,19 +27,17 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%d-%B-%Y')"
 
-      - name: Get Package.json Version
-        id: get-version
-        run: |
-          version=$(cat package.json | jq -r .version)
-          echo "::set-output name=version::$version"
-
       - name: Build, Tag, and Push the Image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: docker_push
-          IMAGE_TAG: ${{ steps.date.outputs.date }}-latest-${{ steps.get-version.outputs.version }}
+          IMAGE_TAG: ${{ steps.date.outputs.date }}
         run: |
           echo "Image Tag: $IMAGE_TAG"
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+          # Tag and push the "latest" version of the image
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
