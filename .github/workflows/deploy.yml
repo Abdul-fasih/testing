@@ -31,19 +31,15 @@ jobs:
 
       - name: Get Package.json Version
         id: get-version
-        run: echo "::set-output name=version::$(jq -r .version package.json)"
+        run: echo "::set-output name=version::$(cat package.json | jq -r .version)"
 
       - name: Build, Tag, and Push the Image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: docker_push
-          IMAGE_TAG: ${{ steps.date.outputs.date }}-${{ steps.get-version.outputs.version }}
+          IMAGE_TAG: ${{ steps.date.outputs.date }}-latest-${{ steps.get-version.outputs.version }}
         run: |
           echo "Image Tag: $IMAGE_TAG"
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-          # Tag and push the "latest" version of the image
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
