@@ -26,12 +26,16 @@ jobs:
       - name: Debug Image Tag
         run: echo "Image Tag:${{ steps.increment-git-tag.outputs.git-tag }}"
 
+      - name: Get Current Date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d%H%M%S')" 
+
       - name: Build, Tag, and Push the Image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: docker_push
-          IMAGE_TAG: docker_push-$(date +'%Y%m%d%H%M%S')
+          IMAGE_TAG: ${{ steps.date.outputs.date }}
         run: |
           echo $IMAGE_TAG thisis an image tag
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
