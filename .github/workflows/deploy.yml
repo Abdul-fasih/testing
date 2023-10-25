@@ -31,7 +31,9 @@ jobs:
 
       - name: Get Package.json Version
         id: get-version
-        run: echo "::set-output name=version::$(cat package.json | jq -r .version)"
+        run: |
+          version=$(cat package.json | jq -r .version)
+          echo "::set-output name=version::$version"
 
       - name: Build, Tag, and Push the Image to Amazon ECR
         id: build-image
