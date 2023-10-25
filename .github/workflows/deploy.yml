@@ -29,13 +29,14 @@ jobs:
       - name: Get Current Version
         id: get-version
         run: |
-         existing_version=$(aws ecr describe-images --repository-name docker_push --query 'images[0].imageTag' --output text)
-         if [ -z "$existing_version" ]; then
-         echo "::set-output name=version::v0.1.0"
-         else
-         echo "Existing Version: $existing_version"
-         echo "::set-output name=version::$existing_version"
-         fi
+          existing_version=$(aws ecr describe-images --repository-name docker_push --query 'images[0].imageTag' --output text)
+          echo "Fetched Version: $existing_version" # Add this line for debugging
+          if [ -z "$existing_version" ]; then
+          echo "::set-output name=version::v0.1.0"
+          else
+          echo "Existing Version: $existing_version"
+          echo "::set-output name=version::$existing_version"
+          fi
          
       - name: Increment Version
         id: increment-version
