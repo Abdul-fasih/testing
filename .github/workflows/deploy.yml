@@ -1,35 +1,38 @@
-name: Build and Push to ECR
-
+---
+name: Build and Push Image to AWS ECR
 on:
   push:
-    branches:
-      - main  # Adjust to your branch
-
+    branches: [ main ]
 jobs:
-  build:
+  build-and-push:
+    name: Build and Push to ECR
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Repository
+    - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      run: docker buildx create --use
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-    - name: Build Docker Image
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Automatic Tagging of Releases
+      id: increment-git-tag
       run: |
-        docker build -t ${{ secrets.DOCKER_REGISTRY_URL }}:${{ github.sha }} .
-        docker push ${{ secrets.DOCKER_REGISTRY_URL }}:${{ github.sha }}
+        bash ./build/git_update.sh -v major
+
+    - name: Build, Tag, and Push the Image to Amazon ECR
+      id: build-image
       env:
-        DOCKER_CLI_AWS_REGION: ${{ secrets.AWS_REGION }}
-        DOCKER_CLI_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        DOCKER_CLI_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-    - name: Login to AWS ECR
-      run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.DOCKER_REGISTRY_URL }}
-
-    - name: Tag Docker Image
-      run: docker tag ${{ secrets.DOCKER_REGISTRY_URL }}:${{ github.sha }} ${{ secrets.DOCKER_REGISTRY_URL }}:latest
-
-    - name: Push Docker Image to ECR
-      run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}:latest
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: docker_push
+        IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
