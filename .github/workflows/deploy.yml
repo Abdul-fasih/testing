@@ -26,12 +26,32 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%d-%B-%Y')"
 
+      - name: Get Current Version
+        id: get-version
+        run: |
+          # Fetch the existing version from ECR (replace with your actual ECR details)
+          existing_version=$(aws ecr describe-images --repository-name docker_push --query 'images[0].imageTag' --output text)
+          echo "::set-output name=version::${existing_version:-v0.1.0}" # Set to v0.1.0 if no version found
+
+      - name: Increment Version
+        id: increment-version
+        run: |
+          current_version=${{ steps.get-version.outputs.version }}
+          # Split the version string and increment the last part (assuming format v0.1.0)
+          IFS='.' read -ra version_parts <<< "$current_version"
+          major=${version_parts[0]}
+          minor=${version_parts[1]}
+          patch=${version_parts[2]}
+          ((patch++))
+          new_version="v$major.$minor.$patch"
+          echo "::set-output name=version::${new_version}"
+
       - name: Build, Tag, and Push the Image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: docker_push
-          IMAGE_TAG: ${{ steps.date.outputs.date }}
+          IMAGE_TAG: ${{ steps.date.outputs.date }}-${{ steps.increment-version.outputs.version }}
         run: |
           echo "Image Tag: $IMAGE_TAG"
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
