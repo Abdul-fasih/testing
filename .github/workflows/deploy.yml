@@ -22,13 +22,9 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      
-      - name: Debug Image Tag
-        run: echo "Image Tag:${{ steps.increment-git-tag.outputs.git-tag }}"
-
       - name: Get Current Date
         id: date
-        run: echo "::set-output name=date::$(date +'%Y%m%d%H%M%S')" 
+        run: echo "::set-output name=date::$(date +'%Y-%B-%Y')"
 
       - name: Build, Tag, and Push the Image to Amazon ECR
         id: build-image
@@ -37,6 +33,6 @@ jobs:
           ECR_REPOSITORY: docker_push
           IMAGE_TAG: ${{ steps.date.outputs.date }}
         run: |
-          echo $IMAGE_TAG thisis an image tag
+          echo "Image Tag: $IMAGE_TAG"
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
